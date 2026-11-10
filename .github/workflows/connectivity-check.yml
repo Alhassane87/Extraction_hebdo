@@ -1,0 +1,50 @@
+name: Test de connectivite DHIS2
+
+# Declenchement manuel uniquement : ce workflow sert a verifier, une fois,
+# si les runners GitHub-hosted atteignent le serveur DHIS2 avant de figer
+# l'architecture du cron hebdomadaire (voir docs/decisions/0001-runner-connectivity.md).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  connectivity:
+    runs-on: ubuntu-latest
+    env:
+      DHIS2_USER: ${{ secrets.DHIS2_USER }}
+      DHIS2_PASSWORD: ${{ secrets.DHIS2_PASSWORD }}
+    steps:
+      - name: Tester les URLs et modes SSL candidats
+        shell: bash
+        run: |
+          set +e
+          urls=("https://senegal.dhis2.org/dhis" "https://senegal.dhis2.org")
+          echo "## Resultat du test de connectivite" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| URL | SSL | Code HTTP | Latence (s) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          any_ok=0
+          for url in "${urls[@]}"; do
+            for ssl_flag in "" "--insecure"; do
+              label="stricte"
+              [ -n "$ssl_flag" ] && label="desactivee"
+              result=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" --max-time 30 \
+                $ssl_flag -u "${DHIS2_USER}:${DHIS2_PASSWORD}" \
+                "${url}/api/me.json?fields=username")
+              code=$(echo "$result" | cut -d' ' -f1)
+              latence=$(echo "$result" | cut -d' ' -f2)
+              echo "| $url | $label | $code | $latence |" >> "$GITHUB_STEP_SUMMARY"
+              echo "URL=$url SSL=$label CODE=$code LATENCE=${latence}s"
+              if [ "$code" = "200" ]; then
+                any_ok=1
+              fi
+            done
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$any_ok" = "1" ]; then
+            echo "**Au moins une combinaison URL/SSL repond 200.** Les runners GitHub-hosted semblent joindre DHIS2." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**Aucune combinaison ne repond 200.** Probable blocage reseau/pare-feu cote DHIS2 depuis les IP GitHub-hosted — envisager un runner auto-heberge." >> "$GITHUB_STEP_SUMMARY"
+          fi
