@@ -1,0 +1,26 @@
+# Environnement / secrets
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / front-end
+node_modules/
+dist/
+
+# Verrous SIG (QGIS/ArcGIS) laissés par erreur
+*.sr.lock
+*.lock.lock
+
+# Éditeurs / OS
+.DS_Store
+Thumbs.db
+
+# Sorties locales ponctuelles
+*.xlsx.tmp
