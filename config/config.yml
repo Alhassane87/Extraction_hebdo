@@ -1,0 +1,24 @@
+dhis2:
+  urls_candidates:
+    - "https://senegal.dhis2.org/dhis"
+    - "https://senegal.dhis2.org"
+  verify_ssl: true   # surchargé par DHIS2_VERIFY_SSL si cette variable d'environnement est définie
+
+chemins:
+  gabarit: "config/gabarit.xlsx"
+  sortie_dir: "data/exports"
+  historique: "data/history.csv"
+  geo_cache: "data/geo/cache_dhis2.geojson"
+  geo_local: "data/geo/districts_local.geojson"
+
+seuils:
+  critique: 70
+  conforme: 90
+  baisse: 5
+
+extraction:
+  nb_mois_fenetre: 3   # mois courant + 2 précédents
+  dates_a_exclure: []  # format AAAA-MM-JJ, usage ponctuel seulement
+
+dashboard:
+  nb_extractions_detail: 8
